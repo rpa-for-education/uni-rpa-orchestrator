@@ -39,10 +39,16 @@ def load_user(username):
     return None
 
 # Khởi tạo bảng
-init_db()
+try:
+    init_db()
+    logger.debug("Database initialized")
+except Exception as e:
+    logger.error(f"Failed to initialize database: {str(e)}")
+    raise
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    logger.debug("Accessing /login")
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if request.method == "POST":
@@ -60,6 +66,7 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
+    logger.debug("Accessing /logout")
     logout_user()
     flash("Đăng xuất thành công!", "success")
     return redirect(url_for('login'))
@@ -67,6 +74,7 @@ def logout():
 @app.route("/")
 @login_required
 def index():
+    logger.debug("Accessing /")
     session = SESSION()
     try:
         schedules = session.query(Schedule).all()
@@ -86,6 +94,10 @@ def index():
             ai_status=ai_status,
             kbs_status=kbs_status
         )
+    except Exception as e:
+        logger.error(f"Error in index: {str(e)}")
+        flash("Lỗi khi tải trang chủ", "danger")
+        return render_template("index.html", schedules=[], logs=[], active_schedules=0, total_runs=0, ai_status="N/A", kbs_status="N/A")
     finally:
         session.close()
 
@@ -120,6 +132,7 @@ def trigger_kbs():
 @app.route("/api/stats", methods=["GET"])
 @login_required
 def stats():
+    logger.debug("Accessing /api/stats")
     session = SESSION()
     try:
         end_date = datetime.utcnow()
@@ -157,6 +170,7 @@ def stats():
 @app.route("/api/logs", methods=["GET"])
 @login_required
 def get_logs():
+    logger.debug("Accessing /api/logs")
     session = SESSION()
     try:
         logs = session.query(RunLog).order_by(RunLog.start_time.desc()).limit(10).all()
@@ -177,6 +191,7 @@ def get_logs():
         session.close()
 
 if __name__ == "__main__":
+    logger.debug("Starting application")
     session = SESSION()
     try:
         if not session.query(Schedule).first():
@@ -188,8 +203,9 @@ if __name__ == "__main__":
             )
             session.add(sample_schedule)
             session.commit()
+            logger.debug("Sample schedule added")
     except Exception as e:
-        logger.error(f"Error initializing sample schedule: {e}")
+        logger.error(f"Error initializing sample schedule: {str(e)}")
         session.rollback()
     finally:
         session.close()
@@ -198,7 +214,7 @@ if __name__ == "__main__":
         load_schedules()
         start_scheduler()
     except Exception as e:
-        logger.error(f"Error starting scheduler: {e}")
+        logger.error(f"Error starting scheduler: {str(e)}")
 
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

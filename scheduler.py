@@ -22,10 +22,15 @@ def run_bot(app_name, action, schedule_id=None):
             app_name=app_name or "unknown"
         )
         session.add(log_entry)
-        session.commit()
-        logger.debug(f"Log entry created: id={log_entry.id}")
+        try:
+            session.commit()
+            logger.debug(f"Log entry created: id={log_entry.id}")
+        except Exception as commit_error:
+            logger.error(f"Failed to commit log entry: {str(commit_error)}")
+            raise
 
         if app_name in ['ai', 'kbs']:
+            logger.debug(f"Calling trigger_github_action for {app_name}")
             success, message = trigger_github_action(app_name, action)
             logger.debug(f"trigger_github_action result: success={success}, message={message}")
             log_entry.end_time = datetime.datetime.utcnow()
@@ -37,6 +42,7 @@ def run_bot(app_name, action, schedule_id=None):
                 log_entry.error_message = message
         else:
             api_endpoint = session.query(Schedule).filter_by(id=schedule_id).first().api_endpoint
+            logger.debug(f"Calling API endpoint: {api_endpoint}")
             response = requests.get(api_endpoint, timeout=30)
             response.raise_for_status()
             log_entry.end_time = datetime.datetime.utcnow()
@@ -44,8 +50,12 @@ def run_bot(app_name, action, schedule_id=None):
             log_entry.output = response.text
 
         session.add(log_entry)
-        session.commit()
-        logger.debug(f"Log entry updated: status={log_entry.status}")
+        try:
+            session.commit()
+            logger.debug(f"Log entry updated: status={log_entry.status}")
+        except Exception as commit_error:
+            logger.error(f"Failed to commit log update: {str(commit_error)}")
+            raise
     except Exception as e:
         logger.error(f"Error in run_bot: {str(e)}")
         log_entry.end_time = datetime.datetime.utcnow()
@@ -55,10 +65,13 @@ def run_bot(app_name, action, schedule_id=None):
         try:
             session.commit()
         except Exception as commit_error:
-            logger.error(f"Failed to commit log: {commit_error}")
+            logger.error(f"Failed to commit error log: {commit_error}")
         raise
     finally:
-        session.close()
+        try:
+            session.close()
+        except Exception as close_error:
+            logger.error(f"Failed to close session: {str(close_error)}")
         logger.debug("Session closed")
 
 def load_schedules():
@@ -73,11 +86,21 @@ def load_schedules():
                 args=[None, 'start', schedule.id]
             )
             logger.debug(f"Added schedule: id={schedule.id}, bot_name={schedule.bot_name}")
+    except Exception as e:
+        logger.error(f"Error loading schedules: {str(e)}")
+        raise
     finally:
-        session.close()
+        try:
+            session.close()
+        except Exception as close_error:
+            logger.error(f"Failed to close session: {str(close_error)}")
         logger.debug("Schedules loaded")
 
 def start_scheduler():
     logger.debug("Starting scheduler")
-    scheduler.start()
-    logger.debug("Scheduler started")
+    try:
+        scheduler.start()
+        logger.debug("Scheduler started")
+    except Exception as e:
+        logger.error(f"Error starting scheduler: {str(e)}")
+        raise
