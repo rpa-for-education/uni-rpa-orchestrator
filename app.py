@@ -9,11 +9,12 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 import logging
 import bcrypt
+import sys
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", 'rpa_orchestrator_secret_key_2025')
 
-logging.basicConfig(filename='orchestrator.log', level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
