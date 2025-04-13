@@ -314,17 +314,49 @@
     <!-- Custom JS -->
     <script>
         $(document).ready(function() {
-            // Initialize DataTables
+            // Initialize DataTables for schedules
             $('#schedulesTable').DataTable({
                 responsive: true,
                 pageLength: 5,
                 lengthMenu: [5, 10, 25, 50]
             });
-            $('#logsTable').DataTable({
+
+            // Initialize DataTables for logs
+            const logsTable = $('#logsTable').DataTable({
                 responsive: true,
                 pageLength: 5,
                 lengthMenu: [5, 10, 25, 50]
             });
+
+            // Function to update logs table
+            function updateLogsTable() {
+                $.getJSON('/api/logs', function(data) {
+                    if (data.error) {
+                        console.error('Logs error:', data.error);
+                        return;
+                    }
+                    logsTable.clear();
+                    data.forEach(log => {
+                        const statusBadge = log.status === 'SUCCESS' ?
+                            `<span class="badge bg-success">${log.status}</span>` :
+                            log.status === 'FAILED' ?
+                            `<span class="badge bg-danger">${log.status}</span>` :
+                            `<span class="badge bg-warning">${log.status}</span>`;
+                        logsTable.row.add([
+                            log.app_name,
+                            new Date(log.start_time).toLocaleString(),
+                            log.end_time ? new Date(log.end_time).toLocaleString() : '',
+                            statusBadge,
+                            log.output,
+                            log.error_message
+                        ]);
+                    });
+                    logsTable.draw();
+                });
+            }
+
+            // Initial load of logs
+            updateLogsTable();
 
             // Fetch chart data
             $.getJSON('/api/stats', function(data) {
@@ -399,29 +431,30 @@
                     $(this).remove();
                 });
             }
-        });
 
-        // Trigger action for AI/KBS
-        function triggerAction(app, action) {
-            const endpoint = app === 'ai' ? '/trigger_github_ai' : '/trigger_github_kbs';
-            $.ajax({
-                url: endpoint,
-                type: 'POST',
-                data: { action: action },
-                dataType: 'json',
-                success: function(response) {
-                    showToast('Success', response.message, 'success');
-                    setTimeout(() => location.reload(), 1000); // Reload để cập nhật trạng thái
-                },
-                error: function(xhr) {
-                    let errorMsg = 'An error occurred';
-                    try {
-                        errorMsg = xhr.responseJSON.message || errorMsg;
-                    } catch (e) {}
-                    showToast('Error', errorMsg, 'danger');
-                }
-            });
-        }
+            // Trigger action for AI/KBS
+            function triggerAction(app, action) {
+                const endpoint = app === 'ai' ? '/trigger_github_ai' : '/trigger_github_kbs';
+                $.ajax({
+                    url: endpoint,
+                    type: 'POST',
+                    data: { action: action },
+                    dataType: 'json',
+                    success: function(response) {
+                        showToast('Success', response.message, 'success');
+                        updateLogsTable();
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'An error occurred';
+                        try {
+                            errorMsg = xhr.responseJSON.message || errorMsg;
+                        } catch (e) {}
+                        showToast('Error', errorMsg, 'danger');
+                        updateLogsTable();
+                    }
+                });
+            }
+        });
     </script>
     <div id="toast-container"></div>
 </body>

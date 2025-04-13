@@ -19,7 +19,7 @@ def trigger_github_action(app_name, action):
     }
     data = {
         "ref": "main",
-        "inputs": {"action": action}
+        "inputs": {"action": action}  # Khôi phục inputs
     }
 
     session = SESSION()

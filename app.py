@@ -136,6 +136,27 @@ def stats():
     finally:
         session.close()
 
+@app.route("/api/logs", methods=["GET"])
+@login_required
+def get_logs():
+    session = SESSION()
+    try:
+        logs = session.query(RunLog).order_by(RunLog.start_time.desc()).limit(10).all()
+        return jsonify([
+            {
+                "app_name": log.app_name or "N/A",
+                "start_time": log.start_time.isoformat(),
+                "end_time": log.end_time.isoformat() if log.end_time else "",
+                "status": log.status,
+                "output": log.output or "",
+                "error_message": log.error_message or ""
+            } for log in logs
+        ])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        session.close()
+
 if __name__ == "__main__":
     session = SESSION()
     try:
