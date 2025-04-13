@@ -65,7 +65,7 @@ def run_bot(app_name, action, schedule_id=None):
         try:
             session.commit()
         except Exception as commit_error:
-            logger.error(f"Failed to commit error log: {commit_error}")
+            logger.error(f"Failed to commit error log: {str(commit_error)}")
         raise
     finally:
         try:

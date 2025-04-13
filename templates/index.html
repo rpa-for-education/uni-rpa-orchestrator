@@ -37,6 +37,7 @@
         .btn-trigger {
             font-size: 1.1rem;
             padding: 10px 20px;
+            border-radius: 5unofficial copy
             border-radius: 5px;
             margin: 5px;
         }
@@ -328,7 +329,8 @@
             const logsTable = $('#logsTable').DataTable({
                 responsive: true,
                 pageLength: 5,
-                lengthMenu: [5, 10, 25, 50]
+                lengthMenu: [5, 10, 25, 50],
+                order: [[1, 'desc']] // Sort by start_time (column 1) descending
             });
 
             // Global chart instances
@@ -483,7 +485,7 @@
                         console.log('AJAX success:', response);
                         showToast('Success', response.message, 'success');
                         updateLogsTable();
-                        updateCharts(); // Update charts after success
+                        updateCharts();
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.error(`AJAX error: ${textStatus} - ${errorThrown}`);
@@ -499,7 +501,7 @@
                     },
                     complete: function() {
                         console.log(`AJAX completed for ${endpoint}`);
-                        setTimeout(() => { isProcessing = false; }, 1000); // Debounce 1s
+                        setTimeout(() => { isProcessing = false; }, 1000);
                     }
                 });
             }
