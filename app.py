@@ -3,9 +3,8 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, f
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from db import SessionFactory
 from models import Schedule, RunLog
-from scheduler import start_scheduler, load_schedules
-from github_trigger import trigger_github_ai_action
-from github_trigger import trigger_github_kbs_action
+from scheduler import start_scheduler, load_schedules, run_bot
+from github_trigger import trigger_github_action
 from sqlalchemy import func
 from datetime import datetime, timedelta
 import logging
@@ -26,18 +25,15 @@ users = {
     }
 }
 
-
 class User(UserMixin):
     def __init__(self, username):
         self.id = username
-
 
 @login_manager.user_loader
 def load_user(username):
     if username in users:
         return User(username)
     return None
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -49,20 +45,18 @@ def login():
         if username in users and bcrypt.checkpw(password.encode('utf-8'), users[username]['password'].encode('utf-8')):
             user = User(username)
             login_user(user)
-            flash("Logged in successfully!", "success")
+            flash("Đăng nhập thành công!", "success")
             return redirect(url_for('index'))
         else:
-            flash("Invalid username or password", "danger")
+            flash("Sai tài khoản hoặc mật khẩu", "danger")
     return render_template("login.html")
-
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    flash("Logged out successfully!", "success")
+    flash("Đăng xuất thành công!", "success")
     return redirect(url_for('login'))
-
 
 @app.route("/")
 @login_required
@@ -72,8 +66,10 @@ def index():
     logs = session.query(RunLog).order_by(RunLog.start_time.desc()).limit(10).all()
     active_schedules = session.query(Schedule).filter_by(active=True).count()
     total_runs = session.query(RunLog).count()
-    latest_status = session.query(RunLog).order_by(RunLog.start_time.desc()).first()
-    latest_status = latest_status.status if latest_status else "N/A"
+    ai_log = session.query(RunLog).filter_by(app_name="ai").order_by(RunLog.start_time.desc()).first()
+    kbs_log = session.query(RunLog).filter_by(app_name="kbs").order_by(RunLog.start_time.desc()).first()
+    ai_status = ai_log.status if ai_log else "N/A"
+    kbs_status = kbs_log.status if kbs_log else "N/A"
     session.close()
     return render_template(
         "index.html",
@@ -81,27 +77,23 @@ def index():
         logs=logs,
         active_schedules=active_schedules,
         total_runs=total_runs,
-        latest_status=latest_status
+        ai_status=ai_status,
+        kbs_status=kbs_status
     )
 
 @app.route("/trigger_github_ai", methods=["POST"])
 @login_required
 def trigger_ai():
-    success, message = trigger_github_ai_action()
-    if success:
-        return jsonify({"message": "Workflow triggered successfully"})
-    else:
-        return jsonify({"message": message}), 500
+    action = request.form.get('action', 'start')
+    run_bot('ai', action)
+    return jsonify({"message": f"Triggered {action} for AI"})
 
 @app.route("/trigger_github_kbs", methods=["POST"])
 @login_required
 def trigger_kbs():
-    success, message = trigger_github_kbs_action()
-    if success:
-        return jsonify({"message": "Workflow triggered successfully"})
-    else:
-        return jsonify({"message": message}), 500
-
+    action = request.form.get('action', 'start')
+    run_bot('kbs', action)
+    return jsonify({"message": f"Triggered {action} for KBS"})
 
 @app.route("/api/stats", methods=["GET"])
 @login_required
@@ -138,7 +130,6 @@ def stats():
     except Exception as e:
         session.close()
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     session = SessionFactory()
