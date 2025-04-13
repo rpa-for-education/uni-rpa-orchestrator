@@ -86,7 +86,7 @@ def index():
 
 @app.route("/trigger_github_ai", methods=["POST"])
 @login_required
-def trigger():
+def trigger_ai():
     success, message = trigger_github_ai_action()
     if success:
         return jsonify({"message": "Workflow triggered successfully"})
@@ -95,7 +95,7 @@ def trigger():
 
 @app.route("/trigger_github_kbs", methods=["POST"])
 @login_required
-def trigger():
+def trigger_kbs():
     success, message = trigger_github_kbs_action()
     if success:
         return jsonify({"message": "Workflow triggered successfully"})
