@@ -1,0 +1,8 @@
+flask==2.3.2
+sqlalchemy==1.4.23
+apscheduler==3.8.1
+requests==2.26.0
+gunicorn==20.1.0
+psycopg2-binary==2.9.1
+flask-login==0.6.3
+bcrypt==4.2.0
