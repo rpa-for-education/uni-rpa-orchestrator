@@ -90,7 +90,7 @@ def trigger_github_action(app_name, action):
         try:
             session.commit()
         except Exception as commit_error:
-            logger.error(f"Failed to commit error log: {commit_error)}")
+            logger.error(f"Failed to commit error log: {str(commit_error)}")  # Sửa lỗi cú pháp
         return False, log_entry.error_message
     finally:
         try:
