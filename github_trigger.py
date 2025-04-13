@@ -5,14 +5,6 @@ from models import RunLog
 from datetime import datetime
 
 def trigger_github_action(app_name, action):
-    """
-    Kích hoạt GitHub Action cho ứng dụng.
-    Args:
-        app_name: 'ai' hoặc 'kbs'
-        action: 'start' hoặc 'stop'
-    Returns:
-        tuple: (success: bool, message: str)
-    """
     pat = os.getenv("GITHUB_PAT")
     if not pat:
         return False, "GITHUB_PAT is not set"
@@ -27,7 +19,7 @@ def trigger_github_action(app_name, action):
     }
     data = {
         "ref": "main",
-        "inputs": {"action": action}  # Truyền action vào workflow
+        "inputs": {"action": action}
     }
 
     session = SESSION()
@@ -64,7 +56,6 @@ def trigger_github_action(app_name, action):
     finally:
         session.close()
 
-# Giữ hàm cũ cho tương thích
 def trigger_github_ai_action():
     return trigger_github_action('ai', 'start')
 

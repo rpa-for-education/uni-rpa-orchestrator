@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from db import SessionFactory
+from db import SessionFactory, SESSION, init_db
 from models import Schedule, RunLog
 from scheduler import start_scheduler, load_schedules, run_bot
 from github_trigger import trigger_github_action
@@ -35,6 +35,9 @@ def load_user(username):
         return User(username)
     return None
 
+# Khởi tạo bảng
+init_db()
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
@@ -61,25 +64,27 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    session = SessionFactory()
-    schedules = session.query(Schedule).all()
-    logs = session.query(RunLog).order_by(RunLog.start_time.desc()).limit(10).all()
-    active_schedules = session.query(Schedule).filter_by(active=True).count()
-    total_runs = session.query(RunLog).count()
-    ai_log = session.query(RunLog).filter_by(app_name="ai").order_by(RunLog.start_time.desc()).first()
-    kbs_log = session.query(RunLog).filter_by(app_name="kbs").order_by(RunLog.start_time.desc()).first()
-    ai_status = ai_log.status if ai_log else "N/A"
-    kbs_status = kbs_log.status if kbs_log else "N/A"
-    session.close()
-    return render_template(
-        "index.html",
-        schedules=schedules,
-        logs=logs,
-        active_schedules=active_schedules,
-        total_runs=total_runs,
-        ai_status=ai_status,
-        kbs_status=kbs_status
-    )
+    session = SESSION()
+    try:
+        schedules = session.query(Schedule).all()
+        logs = session.query(RunLog).order_by(RunLog.start_time.desc()).limit(10).all()
+        active_schedules = session.query(Schedule).filter_by(active=True).count()
+        total_runs = session.query(RunLog).count()
+        ai_log = session.query(RunLog).filter_by(app_name="ai").order_by(RunLog.start_time.desc()).first()
+        kbs_log = session.query(RunLog).filter_by(app_name="kbs").order_by(RunLog.start_time.desc()).first()
+        ai_status = ai_log.status if ai_log else "N/A"
+        kbs_status = kbs_log.status if kbs_log else "N/A"
+        return render_template(
+            "index.html",
+            schedules=schedules,
+            logs=logs,
+            active_schedules=active_schedules,
+            total_runs=total_runs,
+            ai_status=ai_status,
+            kbs_status=kbs_status
+        )
+    finally:
+        session.close()
 
 @app.route("/trigger_github_ai", methods=["POST"])
 @login_required
@@ -98,7 +103,7 @@ def trigger_kbs():
 @app.route("/api/stats", methods=["GET"])
 @login_required
 def stats():
-    session = SessionFactory()
+    session = SESSION()
     try:
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=7)
@@ -122,17 +127,17 @@ def stats():
             if date_str not in date_data:
                 date_data[date_str] = 0
             current_date += timedelta(days=1)
-        session.close()
         return jsonify({
             "status_counts": status_data,
             "date_counts": date_data
         })
     except Exception as e:
-        session.close()
         return jsonify({"error": str(e)}), 500
+    finally:
+        session.close()
 
 if __name__ == "__main__":
-    session = SessionFactory()
+    session = SESSION()
     try:
         if not session.query(Schedule).first():
             sample_schedule = Schedule(
