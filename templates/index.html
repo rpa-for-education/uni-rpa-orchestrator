@@ -321,15 +321,15 @@
             // Initialize DataTables for schedules
             const schedulesTable = $('#schedulesTable').DataTable({
                 responsive: true,
-                pageLength: 5,
-                lengthMenu: [5, 10, 25, 50]
+                pageLength: 10,
+                lengthMenu: [10, 25, 50]
             });
 
             // Initialize DataTables for logs
             const logsTable = $('#logsTable').DataTable({
                 responsive: true,
-                pageLength: 5,
-                lengthMenu: [5, 10, 25, 50],
+                pageLength: 10,
+                lengthMenu: [10, 25, 50],
                 order: [[1, 'desc']] // Sort by start_time (column 1) descending
             });
 
