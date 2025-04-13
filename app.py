@@ -77,14 +77,34 @@ def index():
     logger.debug("Accessing /")
     session = SESSION()
     try:
+        # Query schedules
         schedules = session.query(Schedule).all()
+        logger.debug(f"Loaded {len(schedules)} schedules")
+        if not schedules:
+            logger.warning("No schedules found, adding sample")
+            sample_schedule = Schedule(
+                bot_name="Sample Bot",
+                schedule="*/5 * * * *",
+                api_endpoint="https://jsonplaceholder.typicode.com/todos/1",
+                active=True
+            )
+            session.add(sample_schedule)
+            session.commit()
+            schedules = [sample_schedule]
+
+        # Query logs
         logs = session.query(RunLog).order_by(RunLog.start_time.desc()).limit(10).all()
+        logger.debug(f"Loaded {len(logs)} logs")
+
+        # Query stats
         active_schedules = session.query(Schedule).filter_by(active=True).count()
         total_runs = session.query(RunLog).count()
         ai_log = session.query(RunLog).filter_by(app_name="ai").order_by(RunLog.start_time.desc()).first()
         kbs_log = session.query(RunLog).filter_by(app_name="kbs").order_by(RunLog.start_time.desc()).first()
         ai_status = ai_log.status if ai_log else "N/A"
         kbs_status = kbs_log.status if kbs_log else "N/A"
+        logger.debug(f"Stats: active_schedules={active_schedules}, total_runs={total_runs}, ai_status={ai_status}, kbs_status={kbs_status}")
+
         return render_template(
             "index.html",
             schedules=schedules,
@@ -97,9 +117,20 @@ def index():
     except Exception as e:
         logger.error(f"Error in index: {str(e)}")
         flash("Lỗi khi tải trang chủ", "danger")
-        return render_template("index.html", schedules=[], logs=[], active_schedules=0, total_runs=0, ai_status="N/A", kbs_status="N/A")
+        return render_template(
+            "index.html",
+            schedules=[],
+            logs=[],
+            active_schedules=0,
+            total_runs=0,
+            ai_status="N/A",
+            kbs_status="N/A"
+        )
     finally:
-        session.close()
+        try:
+            session.close()
+        except Exception as e:
+            logger.error(f"Failed to close session: {str(e)}")
 
 @app.route("/trigger_github_ai", methods=["POST"])
 @login_required
@@ -165,7 +196,10 @@ def stats():
         logger.error(f"Error in stats: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
-        session.close()
+        try:
+            session.close()
+        except Exception as e:
+            logger.error(f"Failed to close session: {str(e)}")
 
 @app.route("/api/logs", methods=["GET"])
 @login_required
@@ -188,7 +222,10 @@ def get_logs():
         logger.error(f"Error in get_logs: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
-        session.close()
+        try:
+            session.close()
+        except Exception as e:
+            logger.error(f"Failed to close session: {str(e)}")
 
 if __name__ == "__main__":
     logger.debug("Starting application")
@@ -208,7 +245,10 @@ if __name__ == "__main__":
         logger.error(f"Error initializing sample schedule: {str(e)}")
         session.rollback()
     finally:
-        session.close()
+        try:
+            session.close()
+        except Exception as e:
+            logger.error(f"Failed to close session: {str(e)}")
 
     try:
         load_schedules()

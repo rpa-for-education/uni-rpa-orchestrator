@@ -183,20 +183,20 @@
                     <div class="row mt-4">
                         <div class="col-6 text-center">
                             <div class="btn-group">
-                                <button class="btn btn-primary btn-trigger" onclick="triggerAction('ai', 'start')">
+                                <button class="btn btn-primary btn-trigger" id="trigger-ai-start" data-app="ai" data-action="start">
                                     <i class="fas fa-rocket me-2"></i>Kích hoạt RPA & AI
                                 </button>
-                                <button class="btn btn-danger btn-trigger" onclick="triggerAction('ai', 'stop')">
+                                <button class="btn btn-danger btn-trigger" id="trigger-ai-stop" data-app="ai" data-action="stop">
                                     <i class="fas fa-stop me-2"></i>Dừng RPA & AI
                                 </button>
                             </div>
                         </div>
                         <div class="col-6 text-center">
                             <div class="btn-group">
-                                <button class="btn btn-primary btn-trigger" onclick="triggerAction('kbs', 'start')">
+                                <button class="btn btn-primary btn-trigger" id="trigger-kbs-start" data-app="kbs" data-action="start">
                                     <i class="fas fa-rocket me-2"></i>Kích hoạt RPA & KBS
                                 </button>
-                                <button class="btn btn-danger btn-trigger" onclick="triggerAction('kbs', 'stop')">
+                                <button class="btn btn-danger btn-trigger" id="trigger-kbs-stop" data-app="kbs" data-action="stop">
                                     <i class="fas fa-stop me-2"></i>Dừng RPA & KBS
                                 </button>
                             </div>
@@ -264,7 +264,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for schedule in schedules %}
+                                            {% for log in logs %}
                                             <tr>
                                                 <td>{{ log.app_name or 'N/A' }}</td>
                                                 <td>{{ log.start_time }}</td>
@@ -318,7 +318,7 @@
             console.log("Document ready");
 
             // Initialize DataTables for schedules
-            $('#schedulesTable').DataTable({
+            const schedulesTable = $('#schedulesTable').DataTable({
                 responsive: true,
                 pageLength: 5,
                 lengthMenu: [5, 10, 25, 50]
@@ -330,6 +330,10 @@
                 pageLength: 5,
                 lengthMenu: [5, 10, 25, 50]
             });
+
+            // Global chart instances
+            let statusChartInstance = null;
+            let dateChartInstance = null;
 
             // Function to update logs table
             function updateLogsTable() {
@@ -362,65 +366,79 @@
                 });
             }
 
-            // Initial load of logs
+            // Function to update charts
+            function updateCharts() {
+                console.log("Updating charts");
+                $.getJSON('/api/stats', function(data) {
+                    if (data.error) {
+                        console.error('Stats error:', data.error);
+                        return;
+                    }
+
+                    // Destroy existing charts
+                    if (statusChartInstance) {
+                        statusChartInstance.destroy();
+                    }
+                    if (dateChartInstance) {
+                        dateChartInstance.destroy();
+                    }
+
+                    // Status Chart (Bar)
+                    const statusCtx = document.getElementById('statusChart').getContext('2d');
+                    statusChartInstance = new Chart(statusCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Success', 'Failed', 'Running'],
+                            datasets: [{
+                                label: 'Run Count',
+                                data: [
+                                    data.status_counts.SUCCESS || 0,
+                                    data.status_counts.FAILED || 0,
+                                    data.status_counts.RUNNING || 0
+                                ],
+                                backgroundColor: ['#28a745', '#dc3545', '#ffc107']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+
+                    // Date Chart (Line)
+                    const dateLabels = Object.keys(data.date_counts).sort();
+                    const dateData = dateLabels.map(date => data.date_counts[date]);
+                    const dateCtx = document.getElementById('dateChart').getContext('2d');
+                    dateChartInstance = new Chart(dateCtx, {
+                        type: 'line',
+                        data: {
+                            labels: dateLabels,
+                            datasets: [{
+                                label: 'Runs Per Day',
+                                data: dateData,
+                                borderColor: '#007bff',
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+
+                    console.log("Charts updated");
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('Failed to fetch stats:', textStatus, errorThrown);
+                });
+            }
+
+            // Initial load
             updateLogsTable();
-
-            // Fetch chart data
-            $.getJSON('/api/stats', function(data) {
-                if (data.error) {
-                    console.error('Stats error:', data.error);
-                    return;
-                }
-
-                // Status Chart (Bar)
-                const statusCtx = document.getElementById('statusChart').getContext('2d');
-                new Chart(statusCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Success', 'Failed', 'Running'],
-                        datasets: [{
-                            label: 'Run Count',
-                            data: [
-                                data.status_counts.SUCCESS || 0,
-                                data.status_counts.FAILED || 0,
-                                data.status_counts.RUNNING || 0
-                            ],
-                            backgroundColor: ['#28a745', '#dc3545', '#ffc107']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                });
-
-                // Date Chart (Line)
-                const dateLabels = Object.keys(data.date_counts).sort();
-                const dateData = dateLabels.map(date => data.date_counts[date]);
-                const dateCtx = document.getElementById('dateChart').getContext('2d');
-                new Chart(dateCtx, {
-                    type: 'line',
-                    data: {
-                        labels: dateLabels,
-                        datasets: [{
-                            label: 'Runs Per Day',
-                            data: dateData,
-                            borderColor: '#007bff',
-                            fill: false
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                });
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.error('Failed to fetch stats:', textStatus, errorThrown);
-            });
+            updateCharts();
 
             // Toast function
             function showToast(title, message, type) {
@@ -442,8 +460,14 @@
                 });
             }
 
-            // Trigger action for AI/KBS
-            window.triggerAction = function(app, action) {
+            // Trigger action with debounce
+            let isProcessing = false;
+            function triggerAction(app, action) {
+                if (isProcessing) {
+                    console.log(`Ignoring duplicate trigger: app=${app}, action=${action}`);
+                    return;
+                }
+                isProcessing = true;
                 console.log(`Triggering action: app=${app}, action=${action}`);
                 const endpoint = app === 'ai' ? '/trigger_github_ai' : '/trigger_github_kbs';
                 $.ajax({
@@ -459,6 +483,7 @@
                         console.log('AJAX success:', response);
                         showToast('Success', response.message, 'success');
                         updateLogsTable();
+                        updateCharts(); // Update charts after success
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.error(`AJAX error: ${textStatus} - ${errorThrown}`);
@@ -470,12 +495,21 @@
                         }
                         showToast('Error', errorMsg, 'danger');
                         updateLogsTable();
+                        updateCharts();
                     },
                     complete: function() {
                         console.log(`AJAX completed for ${endpoint}`);
+                        setTimeout(() => { isProcessing = false; }, 1000); // Debounce 1s
                     }
                 });
             }
+
+            // Bind button clicks
+            $('.btn-trigger').on('click', function() {
+                const app = $(this).data('app');
+                const action = $(this).data('action');
+                triggerAction(app, action);
+            });
         });
     </script>
     <div id="toast-container"></div>
