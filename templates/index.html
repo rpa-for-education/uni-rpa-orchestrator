@@ -97,19 +97,19 @@
                         <li class="nav-item">
                             <a href="/" class="nav-link active">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
+                                <p>Bảng điều khiển</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="#schedules" class="nav-link">
                                 <i class="nav-icon fas fa-calendar-alt"></i>
-                                <p>Schedules</p>
+                                <p>Kế hoạch</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="#logs" class="nav-link">
                                 <i class="nav-icon fas fa-history"></i>
-                                <p>Run Logs</p>
+                                <p>Lịch sử</p>
                             </a>
                         </li>
                     </ul>
@@ -121,7 +121,7 @@
         <div class="content-wrapper">
             <div class="content-header">
                 <div class="container-fluid">
-                    <h1 class="m-0">Dashboard</h1>
+                    <h1 class="m-0">Bảng điều khiển</h1>
                 </div>
             </div>
             <div class="content">
@@ -132,7 +132,7 @@
                             <div class="info-box bg-info">
                                 <span class="info-box-icon"><i class="fas fa-calendar-check"></i></span>
                                 <div class="info-box-content">
-                                    <span class="info-box-text">Active Schedules</span>
+                                    <span class="info-box-text">Kế hoạch vận hành</span>
                                     <span class="info-box-number">{{ active_schedules }}</span>
                                 </div>
                             </div>
@@ -141,7 +141,7 @@
                             <div class="info-box bg-success">
                                 <span class="info-box-icon"><i class="fas fa-running"></i></span>
                                 <div class="info-box-content">
-                                    <span class="info-box-text">Total Runs</span>
+                                    <span class="info-box-text">Tổng số lượt chạy</span>
                                     <span class="info-box-number">{{ total_runs }}</span>
                                 </div>
                             </div>
@@ -161,13 +161,13 @@
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="chart-container">
-                                <h3 class="text-center">Run Status</h3>
+                                <h3 class="text-center">Trạng thái</h3>
                                 <canvas id="statusChart"></canvas>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="chart-container">
-                                <h3 class="text-center">Runs Per Day</h3>
+                                <h3 class="text-center">Số lượt chạy hàng ngày</h3>
                                 <canvas id="dateChart"></canvas>
                             </div>
                         </div>
@@ -176,9 +176,18 @@
                     <!-- Trigger Button -->
                     <div class="row mt-4">
                         <div class="col-12 text-center">
-                            <form id="triggerForm">
+                            <form id="triggerFormAI">
                                 <button type="submit" class="btn btn-primary btn-trigger">
-                                    <i class="fas fa-rocket me-2"></i>Trigger GitHub Action
+                                    <i class="fas fa-rocket me-2"></i>Kích hoạt giải pháp RPA & AI
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <form id="triggerFormKBS">
+                                <button type="submit" class="btn btn-primary btn-trigger">
+                                    <i class="fas fa-rocket me-2"></i>Kích hoạt giải pháp RPA & KBS
                                 </button>
                             </form>
                         </div>
@@ -189,17 +198,17 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Schedules</h3>
+                                    <h3 class="card-title">Kế hoạch</h3>
                                 </div>
                                 <div class="card-body table-responsive">
                                     <table id="schedulesTable" class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Bot Name</th>
-                                                <th>Schedule</th>
+                                                <th>Tên Robot</th>
+                                                <th>Kế hoạch</th>
                                                 <th>API Endpoint</th>
-                                                <th>Active</th>
+                                                <th>Hành động</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -230,17 +239,17 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Run Logs (Recent 10)</h3>
+                                    <h3 class="card-title">Lịch sử (10 lượt chạy gần nhất)</h3>
                                 </div>
                                 <div class="card-body table-responsive">
                                     <table id="logsTable" class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
-                                                <th>Start Time</th>
-                                                <th>End Time</th>
-                                                <th>Status</th>
-                                                <th>Output</th>
-                                                <th>Error</th>
+                                                <th>Thời gian bắt đầu</th>
+                                                <th>Thời gian kết thúc</th>
+                                                <th>Trạng thái</th>
+                                                <th>Đầu ra</th>
+                                                <th>Lỗi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -276,7 +285,7 @@
             <div class="float-right d-none d-sm-block">
                 Version 1.0.0
             </div>
-            <strong>RPA Orchestrator © 2025 | Built with <i class="fas fa-heart"></i> by xAI</strong>
+            <strong>UNI RPA ORCHESTRATOR © 2025</strong>
         </footer>
     </div>
 
@@ -361,8 +370,28 @@
                 });
             });
 
-            // Trigger GitHub Action
-            $('#triggerForm').on('submit', function(e) {
+            // Trigger GitHub AI Action
+            $('#triggerFormAI').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '/trigger_github',
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(response) {
+                        showToast('Success', response.message, 'success');
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'An error occurred';
+                        try {
+                            errorMsg = xhr.responseJSON.message || errorMsg;
+                        } catch (e) {}
+                        showToast('Error', errorMsg, 'danger');
+                    }
+                });
+            });
+
+            // Trigger GitHub KBS Action
+            $('#triggerFormKBS').on('submit', function(e) {
                 e.preventDefault();
                 $.ajax({
                     url: '/trigger_github',
