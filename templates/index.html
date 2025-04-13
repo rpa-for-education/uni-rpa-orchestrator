@@ -21,6 +21,7 @@
         .info-box {
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
         }
         .chart-container {
             background-color: white;
@@ -124,7 +125,7 @@
                 <div class="container-fluid">
                     <!-- Info Boxes -->
                     <div class="row">
-                        <div class="col-lg-4 col-6">
+                        <div class="col-lg-3 col-md-6 col-sm-12">
                             <div class="info-box bg-info">
                                 <span class="info-box-icon"><i class="fas fa-calendar-check"></i></span>
                                 <div class="info-box-content">
@@ -133,7 +134,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4 col-6">
+                        <div class="col-lg-3 col-md-6 col-sm-12">
                             <div class="info-box bg-success">
                                 <span class="info-box-icon"><i class="fas fa-running"></i></span>
                                 <div class="info-box-content">
@@ -142,7 +143,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4 col-12">
+                        <div class="col-lg-3 col-md-6 col-sm-12">
                             <div class="info-box bg-warning">
                                 <span class="info-box-icon"><i class="fas fa-flag"></i></span>
                                 <div class="info-box-content">
@@ -151,7 +152,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4 col-12">
+                        <div class="col-lg-3 col-md-6 col-sm-12">
                             <div class="info-box bg-warning">
                                 <span class="info-box-icon"><i class="fas fa-flag"></i></span>
                                 <div class="info-box-content">
@@ -263,7 +264,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for log in logs %}
+                                            {% for schedule in schedules %}
                                             <tr>
                                                 <td>{{ log.app_name or 'N/A' }}</td>
                                                 <td>{{ log.start_time }}</td>
@@ -314,6 +315,8 @@
     <!-- Custom JS -->
     <script>
         $(document).ready(function() {
+            console.log("Document ready");
+
             // Initialize DataTables for schedules
             $('#schedulesTable').DataTable({
                 responsive: true,
@@ -330,6 +333,7 @@
 
             // Function to update logs table
             function updateLogsTable() {
+                console.log("Updating logs table");
                 $.getJSON('/api/logs', function(data) {
                     if (data.error) {
                         console.error('Logs error:', data.error);
@@ -352,6 +356,9 @@
                         ]);
                     });
                     logsTable.draw();
+                    console.log("Logs table updated");
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('Failed to fetch logs:', textStatus, errorThrown);
                 });
             }
 
@@ -411,10 +418,13 @@
                         }
                     }
                 });
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Failed to fetch stats:', textStatus, errorThrown);
             });
 
             // Toast function
             function showToast(title, message, type) {
+                console.log(`Showing toast: ${title} - ${message}`);
                 const toastHtml = `
                     <div class="toast bg-${type}" role="alert" aria-live="assertive" aria-atomic="true">
                         <div class="toast-header">
@@ -424,7 +434,7 @@
                         <div class="toast-body">${message}</div>
                     </div>`;
                 $('#toast-container').append(toastHtml);
-                const toastEl = $('#toast-container .toast:last');
+                const toastEl = $('#toast-container').find('.toast:last');
                 const toast = new bootstrap.Toast(toastEl[0], { delay: 5000 });
                 toast.show();
                 toastEl.on('hidden.bs.toast', function() {
@@ -433,24 +443,36 @@
             }
 
             // Trigger action for AI/KBS
-            function triggerAction(app, action) {
+            window.triggerAction = function(app, action) {
+                console.log(`Triggering action: app=${app}, action=${action}`);
                 const endpoint = app === 'ai' ? '/trigger_github_ai' : '/trigger_github_kbs';
                 $.ajax({
                     url: endpoint,
                     type: 'POST',
                     data: { action: action },
                     dataType: 'json',
+                    timeout: 10000,
+                    beforeSend: function() {
+                        console.log(`Sending AJAX to ${endpoint}`);
+                    },
                     success: function(response) {
+                        console.log('AJAX success:', response);
                         showToast('Success', response.message, 'success');
                         updateLogsTable();
                     },
-                    error: function(xhr) {
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error(`AJAX error: ${textStatus} - ${errorThrown}`);
                         let errorMsg = 'An error occurred';
                         try {
-                            errorMsg = xhr.responseJSON.message || errorMsg;
-                        } catch (e) {}
+                            errorMsg = jqXHR.responseJSON?.message || errorMsg;
+                        } catch (e) {
+                            console.error('Failed to parse error response:', e);
+                        }
                         showToast('Error', errorMsg, 'danger');
                         updateLogsTable();
+                    },
+                    complete: function() {
+                        console.log(`AJAX completed for ${endpoint}`);
                     }
                 });
             }

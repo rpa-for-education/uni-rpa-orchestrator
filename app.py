@@ -11,10 +11,13 @@ import logging
 import bcrypt
 import sys
 
+# Cấu hình logging
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", 'rpa_orchestrator_secret_key_2025')
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -89,16 +92,30 @@ def index():
 @app.route("/trigger_github_ai", methods=["POST"])
 @login_required
 def trigger_ai():
-    action = request.form.get('action', 'start')
-    run_bot('ai', action)
-    return jsonify({"message": f"Triggered {action} for AI"})
+    logger.debug("Received request to /trigger_github_ai")
+    try:
+        action = request.form.get('action', 'start')
+        logger.debug(f"Triggering AI with action: {action}")
+        run_bot('ai', action)
+        logger.debug("run_bot for AI completed")
+        return jsonify({"message": f"Triggered {action} for AI"})
+    except Exception as e:
+        logger.error(f"Error in trigger_ai: {str(e)}")
+        return jsonify({"message": f"Error triggering AI: {str(e)}"}), 500
 
 @app.route("/trigger_github_kbs", methods=["POST"])
 @login_required
 def trigger_kbs():
-    action = request.form.get('action', 'start')
-    run_bot('kbs', action)
-    return jsonify({"message": f"Triggered {action} for KBS"})
+    logger.debug("Received request to /trigger_github_kbs")
+    try:
+        action = request.form.get('action', 'start')
+        logger.debug(f"Triggering KBS with action: {action}")
+        run_bot('kbs', action)
+        logger.debug("run_bot for KBS completed")
+        return jsonify({"message": f"Triggered {action} for KBS"})
+    except Exception as e:
+        logger.error(f"Error in trigger_kbs: {str(e)}")
+        return jsonify({"message": f"Error triggering KBS: {str(e)}"}), 500
 
 @app.route("/api/stats", methods=["GET"])
 @login_required
@@ -132,6 +149,7 @@ def stats():
             "date_counts": date_data
         })
     except Exception as e:
+        logger.error(f"Error in stats: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
         session.close()
@@ -153,6 +171,7 @@ def get_logs():
             } for log in logs
         ])
     except Exception as e:
+        logger.error(f"Error in get_logs: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
         session.close()
@@ -170,7 +189,7 @@ if __name__ == "__main__":
             session.add(sample_schedule)
             session.commit()
     except Exception as e:
-        print(f"Error initializing sample schedule: {e}")
+        logger.error(f"Error initializing sample schedule: {e}")
         session.rollback()
     finally:
         session.close()
@@ -179,7 +198,7 @@ if __name__ == "__main__":
         load_schedules()
         start_scheduler()
     except Exception as e:
-        print(f"Error starting scheduler: {e}")
+        logger.error(f"Error starting scheduler: {e}")
 
     port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True)
