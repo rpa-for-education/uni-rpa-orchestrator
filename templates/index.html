@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPA Orchestrator Dashboard</title>
+    <title>Bảng điều khiển UNI RPA ORCHESTRATOR</title>
     <!-- AdminLTE CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <!-- Bootstrap CSS -->
@@ -89,7 +89,7 @@
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="/" class="brand-link">
-                <span class="brand-text font-weight-light">RPA Orchestrator</span>
+                <span class="brand-text font-weight-light">UNI RPA ORCHESTRATOR</span>
             </a>
             <div class="sidebar">
                 <nav class="mt-2">
@@ -150,7 +150,7 @@
                             <div class="info-box bg-warning">
                                 <span class="info-box-icon"><i class="fas fa-flag"></i></span>
                                 <div class="info-box-content">
-                                    <span class="info-box-text">Latest Status</span>
+                                    <span class="info-box-text">Trạng thái</span>
                                     <span class="info-box-number">{{ latest_status }}</span>
                                 </div>
                             </div>
@@ -175,16 +175,14 @@
 
                     <!-- Trigger Button -->
                     <div class="row mt-4">
-                        <div class="col-12 text-center">
+                        <div class="col-6 text-center">
                             <form id="triggerFormAI">
                                 <button type="submit" class="btn btn-primary btn-trigger">
                                     <i class="fas fa-rocket me-2"></i>Kích hoạt giải pháp RPA & AI
                                 </button>
                             </form>
                         </div>
-                    </div>
-                    <div class="row mt-4">
-                        <div class="col-12 text-center">
+                        <div class="col-6 text-center">
                             <form id="triggerFormKBS">
                                 <button type="submit" class="btn btn-primary btn-trigger">
                                     <i class="fas fa-rocket me-2"></i>Kích hoạt giải pháp RPA & KBS
@@ -198,17 +196,17 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Kế hoạch</h3>
+                                    <h3 class="card-title">Kế hoạch vận hành</h3>
                                 </div>
                                 <div class="card-body table-responsive">
                                     <table id="schedulesTable" class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Tên Robot</th>
-                                                <th>Kế hoạch</th>
+                                                <th>Softbot</th>
+                                                <th>Kế hoạch vận hành</th>
                                                 <th>API Endpoint</th>
-                                                <th>Hành động</th>
+                                                <th>Kích hoạt</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -239,7 +237,7 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Lịch sử (10 lượt chạy gần nhất)</h3>
+                                    <h3 class="card-title">Lịch sử vận hành (10 lượt chạy gần nhất)</h3>
                                 </div>
                                 <div class="card-body table-responsive">
                                     <table id="logsTable" class="table table-bordered table-striped">
@@ -374,7 +372,7 @@
             $('#triggerFormAI').on('submit', function(e) {
                 e.preventDefault();
                 $.ajax({
-                    url: '/trigger_github',
+                    url: '/trigger_github_ai',
                     type: 'POST',
                     dataType: 'json',
                     success: function(response) {
@@ -394,7 +392,7 @@
             $('#triggerFormKBS').on('submit', function(e) {
                 e.preventDefault();
                 $.ajax({
-                    url: '/trigger_github',
+                    url: '/trigger_github_kbs',
                     type: 'POST',
                     dataType: 'json',
                     success: function(response) {
