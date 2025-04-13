@@ -4,7 +4,8 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from db import SessionFactory
 from models import Schedule, RunLog
 from scheduler import start_scheduler, load_schedules
-from github_trigger import trigger_github_action
+from github_trigger import trigger_github_ai_action
+from github_trigger import trigger_github_kbs_action
 from sqlalchemy import func
 from datetime import datetime, timedelta
 import logging
@@ -82,7 +83,6 @@ def index():
         total_runs=total_runs,
         latest_status=latest_status
     )
-
 
 @app.route("/trigger_github_ai", methods=["POST"])
 @login_required
