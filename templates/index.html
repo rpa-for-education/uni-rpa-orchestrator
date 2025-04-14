@@ -101,13 +101,13 @@
                         <li class="nav-item">
                             <a href="#schedules" class="nav-link">
                                 <i class="nav-icon fas fa-calendar-alt"></i>
-                                <p>Kế hoạch</p>
+                                <p>Lịch vận hành</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="#logs" class="nav-link">
                                 <i class="nav-icon fas fa-history"></i>
-                                <p>Lịch sử</p>
+                                <p>Lịch sử vận hành</p>
                             </a>
                         </li>
                     </ul>
@@ -130,7 +130,7 @@
                             <div class="info-box bg-info">
                                 <span class="info-box-icon"><i class="fas fa-calendar-check"></i></span>
                                 <div class="info-box-content">
-                                    <span class="info-box-text">Kế hoạch vận hành</span>
+                                    <span class="info-box-text">Lịch vận hành</span>
                                     <span class="info-box-number">{{ active_schedules }}</span>
                                 </div>
                             </div>
@@ -185,20 +185,20 @@
                         <div class="col-6 text-center">
                             <div class="btn-group">
                                 <button class="btn btn-primary btn-trigger" id="trigger-ai-start" data-app="ai" data-action="start">
-                                    <i class="fas fa-rocket me-2"></i>Kích hoạt RPA & AI
+                                    <i class="fas fa-rocket me-2"></i>Kích hoạt Softbot AI
                                 </button>
                                 <button class="btn btn-danger btn-trigger" id="trigger-ai-stop" data-app="ai" data-action="stop">
-                                    <i class="fas fa-stop me-2"></i>Dừng RPA & AI
+                                    <i class="fas fa-stop me-2"></i>Dừng Softbot AI
                                 </button>
                             </div>
                         </div>
                         <div class="col-6 text-center">
                             <div class="btn-group">
                                 <button class="btn btn-primary btn-trigger" id="trigger-kbs-start" data-app="kbs" data-action="start">
-                                    <i class="fas fa-rocket me-2"></i>Kích hoạt RPA & KBS
+                                    <i class="fas fa-rocket me-2"></i>Kích hoạt Softbot KBS
                                 </button>
                                 <button class="btn btn-danger btn-trigger" id="trigger-kbs-stop" data-app="kbs" data-action="stop">
-                                    <i class="fas fa-stop me-2"></i>Dừng RPA & KBS
+                                    <i class="fas fa-stop me-2"></i>Dừng Softbot KBS
                                 </button>
                             </div>
                         </div>
@@ -209,7 +209,7 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Kế hoạch vận hành</h3>
+                                    <h3 class="card-title">Lịch vận hành</h3>
                                 </div>
                                 <div class="card-body table-responsive">
                                     <table id="schedulesTable" class="table table-bordered table-striped">
@@ -217,7 +217,7 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Softbot</th>
-                                                <th>Kế hoạch vận hành</th>
+                                                <th>Lịch vận hành cố định</th>
                                                 <th>API Endpoint</th>
                                                 <th>Kích hoạt</th>
                                             </tr>
@@ -250,7 +250,7 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h3 class="card-title">Lịch sử vận hành (10 lượt chạy gần nhất)</h3>
+                                    <h3 class="card-title">Lịch sử vận hành</h3>
                                 </div>
                                 <div class="card-body table-responsive">
                                     <table id="logsTable" class="table table-bordered table-striped">
@@ -259,8 +259,8 @@
                                                 <th>Ứng dụng</th>
                                                 <th>Thời gian bắt đầu</th>
                                                 <th>Thời gian kết thúc</th>
+                                                <th>Mô tả</th>
                                                 <th>Trạng thái</th>
-                                                <th>Đầu ra</th>
                                                 <th>Lỗi</th>
                                             </tr>
                                         </thead>
@@ -270,6 +270,7 @@
                                                 <td>{{ log.app_name or 'N/A' }}</td>
                                                 <td>{{ log.start_time }}</td>
                                                 <td>{{ log.end_time or '' }}</td>
+                                                <td>{{ log.output or '' }}</td>
                                                 <td>
                                                     {% if log.status == 'SUCCESS' %}
                                                         <span class="badge bg-success">{{ log.status }}</span>
@@ -279,7 +280,6 @@
                                                         <span class="badge bg-warning">{{ log.status }}</span>
                                                     {% endif %}
                                                 </td>
-                                                <td>{{ log.output or '' }}</td>
                                                 <td>{{ log.error_message or '' }}</td>
                                             </tr>
                                             {% endfor %}
@@ -296,7 +296,7 @@
         <!-- Footer -->
         <footer class="main-footer">
             <div class="float-right d-none d-sm-block">
-                Version 1.0.0
+                Version 1.1
             </div>
             <strong>UNI RPA ORCHESTRATOR © 2025</strong>
         </footer>
